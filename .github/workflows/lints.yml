@@ -16,8 +16,14 @@ jobs:
           version: nightly
 
       - name: Install Dependencies
-        run: yarn
+        run: |
+          cd contracts
+          yarn
       - name: Update Modules
-        run: yarn sync
+        run: |
+          cd contracts
+          yarn sync
       - name: Run lints
-        run: yarn lint
+        run: |
+          cd contracts
+          yarn lint
