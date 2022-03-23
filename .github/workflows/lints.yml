@@ -26,4 +26,4 @@ jobs:
       - name: Run lints
         run: |
           cd contracts
-          yarn lint
+          yarn lint-check
