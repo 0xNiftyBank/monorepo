@@ -14,21 +14,30 @@ contract DebtToken is IDebtToken, ERC721, Ownable {
 
     address private niftyBank;
 
-    constructor(string memory _name, string memory _symbol) ERC721(_name, _symbol) Ownable() {}
+    constructor(string memory _name, string memory _symbol)
+        ERC721(_name, _symbol)
+        Ownable()
+    {}
 
-    function setNiftyBank(address _niftyBank) external onlyOwner() {
+    function setNiftyBank(address _niftyBank) external onlyOwner {
         niftyBank = _niftyBank;
     }
 
     function mint(address _borrower) external returns (uint256) {
-        require(niftyBank != address(0) && msg.sender == niftyBank, "Should only be called by niftyBank");
+        require(
+            niftyBank != address(0) && msg.sender == niftyBank,
+            "Should only be called by niftyBank"
+        );
         uint256 newTokenId = nextTokenId();
         _safeMint(_borrower, newTokenId);
         return newTokenId;
     }
 
     function burn(uint256 _tokenId) external {
-        require(niftyBank != address(0) && msg.sender == niftyBank, "Should only be called by niftyBank");
+        require(
+            niftyBank != address(0) && msg.sender == niftyBank,
+            "Should only be called by niftyBank"
+        );
         _burn(_tokenId);
     }
 
