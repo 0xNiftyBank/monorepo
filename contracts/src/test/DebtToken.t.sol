@@ -25,6 +25,8 @@ contract DebtTokenTest is DSTest, IERC721Receiver {
         assertEq(mintedTokenId, 1);
 
         debtToken.burn(1);
+
+        assertEq(debtToken.currentTokenId(), 1);
     }
 
     function onERC721Received(

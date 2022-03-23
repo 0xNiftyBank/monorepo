@@ -9,9 +9,10 @@ import "./interfaces/IDebtToken.sol";
 import "./interfaces/INiftyBank.sol";
 
 contract NiftyBank is INiftyBank, Ownable {
-    address private debtToken;
+    address public debtToken;
     struct DebtInfo {
-        uint256 debtTokenId;
+        address nft;
+        uint256 tokenId;
         address borrower;
         address paybackToken;
         uint256 borrowAmount;
@@ -20,10 +21,26 @@ contract NiftyBank is INiftyBank, Ownable {
         uint256 returnDeadline;
     }
 
-    mapping(address => mapping(uint256 => DebtInfo)) debts;
+    mapping(uint256 => DebtInfo) debts;
 
     constructor(address _debtToken) Ownable() {
         debtToken = _debtToken;
+    }
+
+    function debtOf(uint256 _debtTokenId) external view 
+    returns 
+    (address, uint256, address, address, uint256, uint256, uint256, uint256) {
+        DebtInfo memory debtInfo = debts[_debtTokenId];
+        return (
+            debtInfo.nft, 
+            debtInfo.tokenId, 
+            debtInfo.borrower, 
+            debtInfo.paybackToken, 
+            debtInfo.borrowAmount,
+            debtInfo.paybackAmount,
+            debtInfo.startDeadline,
+            debtInfo.returnDeadline
+        );
     }
 
     function depositNft(
@@ -41,8 +58,9 @@ contract NiftyBank is INiftyBank, Ownable {
         );
         IERC721(_nft).safeTransferFrom(msg.sender, address(this), _tokenId);
         uint256 debtTokenId = IDebtToken(debtToken).mint(msg.sender);
-        debts[_nft][_tokenId] = DebtInfo({
-            debtTokenId: debtTokenId,
+        debts[debtTokenId] = DebtInfo({
+            nft: _nft,
+            tokenId: _tokenId,
             borrower: msg.sender,
             paybackToken: _paybackToken,
             borrowAmount: _borrowAmount,
@@ -52,30 +70,31 @@ contract NiftyBank is INiftyBank, Ownable {
         });
     }
 
-    function withdrawNft(address _nft, uint256 _tokenId) external {
+    function withdrawNft(uint256 _debtTokenId) external {
         require(
-            msg.sender == debts[_nft][_tokenId].borrower,
+            msg.sender == debts[_debtTokenId].borrower,
             "Only the borrower can withdraw"
         );
-        uint256 debtTokenId = debts[_nft][_tokenId].debtTokenId;
         require(
-            IDebtToken(debtToken).ownerOf(debtTokenId) == msg.sender,
+            IDebtToken(debtToken).ownerOf(_debtTokenId) == msg.sender,
             "Not the debt token holder"
         );
-        IDebtToken(debtToken).burn(debtTokenId);
-        IERC721(_nft).safeTransferFrom(address(this), msg.sender, _tokenId);
+        IDebtToken(debtToken).burn(_debtTokenId);
+        address nft = debts[_debtTokenId].nft;
+        uint256 tokenId = debts[_debtTokenId].tokenId;
+        IERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
     }
 
-    function executeLoan(address _nft, uint256 _tokenId) external {
+    function executeLoan(uint256 _debtTokenId) external {
         require(
-            block.timestamp < debts[_nft][_tokenId].startDeadline,
+            block.timestamp < debts[_debtTokenId].startDeadline,
             "Loan offer expired"
         );
 
-        DebtInfo memory debtInfo = debts[_nft][_tokenId];
+        DebtInfo memory debtInfo = debts[_debtTokenId];
         IDebtToken debtTokenContract = IDebtToken(debtToken);
         require(
-            debtTokenContract.ownerOf(debtInfo.debtTokenId) ==
+            debtTokenContract.ownerOf(_debtTokenId) ==
                 debtInfo.borrower,
             "Loan already started"
         );
@@ -93,42 +112,46 @@ contract NiftyBank is INiftyBank, Ownable {
         debtTokenContract.safeTransferFrom(
             debtInfo.borrower,
             msg.sender,
-            debtInfo.debtTokenId
+            _debtTokenId
         );
     }
 
-    function payDebt(address _nft, uint256 _tokenId) external {
+    function payDebt(uint256 _debtTokenId) external {
         require(
-            msg.sender == debts[_nft][_tokenId].borrower,
+            msg.sender == debts[_debtTokenId].borrower,
             "Only the borrower can pay debt"
         );
         require(
-            block.timestamp < debts[_nft][_tokenId].returnDeadline,
+            block.timestamp < debts[_debtTokenId].returnDeadline,
             "Exceeds deadline"
         );
-        uint256 debtTokenId = debts[_nft][_tokenId].debtTokenId;
-        address paybackToken = debts[_nft][_tokenId].paybackToken;
-        address lender = IDebtToken(debtToken).ownerOf(debtTokenId);
+        address paybackToken = debts[_debtTokenId].paybackToken;
+        address lender = IDebtToken(debtToken).ownerOf(_debtTokenId);
         require(
             IERC20(paybackToken).transferFrom(
                 msg.sender,
                 lender,
-                debts[_nft][_tokenId].paybackAmount
+                debts[_debtTokenId].paybackAmount
             ),
             "Failed to pay back debt"
         );
-        IERC721(_nft).safeTransferFrom(address(this), msg.sender, _tokenId);
-        IDebtToken(debtToken).burn(debtTokenId);
+
+        address nft = debts[_debtTokenId].nft;
+        uint256 tokenId = debts[_debtTokenId].tokenId;
+        IERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
+        IDebtToken(debtToken).burn(_debtTokenId);
     }
 
-    function claimDefaultedNft(address _nft, uint256 _tokenId) external {
+    function claimDefaultedNft(uint256 _debtTokenId) external {
         require(
-            block.timestamp >= debts[_nft][_tokenId].returnDeadline,
+            block.timestamp >= debts[_debtTokenId].returnDeadline,
             "Exceeds deadline"
         );
-        uint256 debtTokenId = debts[_nft][_tokenId].debtTokenId;
-        address lender = IDebtToken(debtToken).ownerOf(debtTokenId);
+        address lender = IDebtToken(debtToken).ownerOf(_debtTokenId);
         require(msg.sender == lender, "Only the lender can claim the NFT");
-        IERC721(_nft).safeTransferFrom(address(this), msg.sender, _tokenId);
+
+        address nft = debts[_debtTokenId].nft;
+        uint256 tokenId = debts[_debtTokenId].tokenId;
+        IERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
     }
 }

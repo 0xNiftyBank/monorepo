@@ -23,6 +23,10 @@ contract DebtToken is IDebtToken, ERC721, Ownable {
         niftyBank = _niftyBank;
     }
 
+    function currentTokenId() external view returns (uint256) {
+        return tokenCounter.current();
+    }
+
     function mint(address _borrower) external returns (uint256) {
         require(
             niftyBank != address(0) && msg.sender == niftyBank,

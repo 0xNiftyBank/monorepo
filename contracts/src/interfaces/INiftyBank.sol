@@ -12,11 +12,11 @@ interface INiftyBank {
         uint256 _returnDeadline
     ) external;
 
-    function executeLoan(address _nft, uint256 _tokenId) external;
+    function executeLoan(uint256 _debtTokenId) external;
 
-    function withdrawNft(address _nft, uint256 _tokenId) external;
+    function withdrawNft(uint256 _debtTokenId) external;
 
-    function payDebt(address _nft, uint256 _tokenId) external;
+    function payDebt(uint256 _debtTokenId) external;
 
-    function claimDefaultedNft(address _nft, uint256 _tokenId) external;
+    function claimDefaultedNft(uint256 _debtTokenId) external;
 }
