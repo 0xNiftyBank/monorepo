@@ -2,7 +2,6 @@ import React, { useCallback } from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 
-import { P } from '../components/Typography';
 import { SecondaryButton } from '../components/Buttons';
 import { routes } from '../utils/routes';
 import { disableEagerWalletConnectPreference } from '../utils/preferences';
@@ -21,7 +20,7 @@ const Wrapper = styled.div`
 const LoginWrapper = styled.div``;
 
 const LogoImg = styled.img`
-  height: 100%;
+  height: 100px;
 `;
 
 const StyledSecondaryButton = styled(SecondaryButton)`
@@ -42,7 +41,11 @@ export const Header = () => {
   }, [clearSession]);
   return (
     <Wrapper>
-      <Logo />
+      <Link href="/" passHref>
+        <a>
+          <Logo />
+        </a>
+      </Link>
       <LoginWrapper>
         {account ? (
           <>
