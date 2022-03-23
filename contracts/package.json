@@ -21,6 +21,7 @@
         "sync": "make update",
         "test": "make test",
         "snapshot": "make snapshot",
-        "lint": "make lint"
+        "lint": "make lint",
+        "lint-check": "make lint-check"
     }
 }

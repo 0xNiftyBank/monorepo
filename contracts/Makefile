@@ -31,6 +31,7 @@ test   :; forge clean && forge test --optimize --optimize-runs 1000000 -v # --ff
 
 # Lints
 lint :; yarn prettier --write 'src/**/*.sol'
+lint-check :; yarn prettier --list-different 'src/**/*.sol'
 
 # Generate Gas Snapshots
 snapshot :; forge clean && forge snapshot --optimize --optimize-runs 1000000
