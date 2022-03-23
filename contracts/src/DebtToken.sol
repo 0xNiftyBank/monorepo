@@ -17,6 +17,10 @@ contract DebtToken is IDebtToken, ERC721, Ownable {
         Ownable()
     {}
 
+    function currentTokenId() external view returns (uint256) {
+        return tokenCounter.current();
+    }
+
     function mint(address _to) external onlyOwner returns (uint256) {
         uint256 newTokenId = nextTokenId();
         _safeMint(_to, newTokenId);

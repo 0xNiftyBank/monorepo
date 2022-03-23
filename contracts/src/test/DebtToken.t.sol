@@ -13,7 +13,6 @@ contract DebtTokenTest is DSTestPlus {
     address constant DEBT_TOKEN_DEPLOYER = 0xb0b670fc1F7724119963018DB0BfA86aDb22d941;
     address constant DEBT_TOKEN_OWNER = 0xED7d5F38C79115ca12fe6C0041abb22F0A06C300;
     address constant OTHER_ADDRESS = 0x7373c42502874C88954bDd6D50b53061F018422e;
-    // address constant MDX_FACTORY = 0x25D2e80cB6B86881Fd7e07dd263Fb79f4AbE033c;
 
     DebtToken debtToken;
     CheatCodes cheats;
