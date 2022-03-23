@@ -12,7 +12,7 @@ contract DebtToken is IDebtToken, ERC721, Ownable {
 
     Counters.Counter private tokenCounter;
 
-    address private niftyBank;
+    address public niftyBank;
 
     constructor(string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
