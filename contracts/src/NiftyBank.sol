@@ -7,6 +7,7 @@ import "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
 import "./interfaces/IDebtToken.sol";
 import "./interfaces/INiftyBank.sol";
+import "./DebtToken.sol";
 
 contract NiftyBank is INiftyBank, Ownable {
     address public debtToken;
@@ -23,8 +24,8 @@ contract NiftyBank is INiftyBank, Ownable {
 
     mapping(uint256 => DebtInfo) debts;
 
-    constructor(address _debtToken) Ownable() {
-        debtToken = _debtToken;
+    constructor() Ownable() {
+        debtToken = address(new DebtToken('NiftyBank Debt Token', 'NDT'));
     }
 
     function debtOf(uint256 _debtTokenId) external view 

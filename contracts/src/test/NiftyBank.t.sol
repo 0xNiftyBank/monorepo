@@ -11,13 +11,12 @@ contract NiftyBankTest is DSTest, IERC721Receiver {
     DebtToken debtToken;
 
     function setUp() public {
-        debtToken = new DebtToken("NiftyCoin", "NIF");
-        niftyBank = new NiftyBank(address(debtToken));
+        niftyBank = new NiftyBank();
     }
 
-    function testConstructor() public {
-        assertEq(niftyBank.debtToken(), address(debtToken));
-    }
+    // function testConstructor() public {
+    //     assertEq(niftyBank.debtToken(), address(debtToken));
+    // }
 
     // function testDepositNft() public {
     //     // the timestamp is sufficiently large
