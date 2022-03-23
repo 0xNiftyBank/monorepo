@@ -12,6 +12,8 @@ contract DebtToken is IDebtToken, ERC721, Ownable {
 
     Counters.Counter private tokenCounter;
 
+    mapping(uint256 => DebtInfo) private debts;
+
     constructor(string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
         Ownable()
@@ -21,14 +23,21 @@ contract DebtToken is IDebtToken, ERC721, Ownable {
         return tokenCounter.current();
     }
 
-    function mint(address _to) external onlyOwner returns (uint256) {
-        uint256 newTokenId = nextTokenId();
-        _safeMint(_to, newTokenId);
-        return newTokenId;
+    function debtInfoOf(uint256 _debtTokenId) external view returns (DebtInfo memory debtInfo) {
+        debtInfo = debts[_debtTokenId];
+        return debtInfo;
     }
 
-    function burn(uint256 _tokenId) external onlyOwner {
-        _burn(_tokenId);
+    function mint(DebtInfo memory _debtInfo) external onlyOwner returns (uint256 debtTokenId) {
+        debtTokenId = nextTokenId();
+        _safeMint(_debtInfo.borrower, debtTokenId);
+        debts[debtTokenId] = _debtInfo;
+        return debtTokenId;
+    }
+
+    function burn(uint256 _debtTokenId) external onlyOwner {
+        _burn(_debtTokenId);
+        delete debts[_debtTokenId];
     }
 
     function nextTokenId() private returns (uint256) {

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
@@ -9,45 +8,17 @@ import "./interfaces/IDebtToken.sol";
 import "./interfaces/INiftyBank.sol";
 import "./DebtToken.sol";
 
-contract NiftyBank is INiftyBank, Ownable {
-    address public debtToken;
-    struct DebtInfo {
-        address nft;
-        uint256 tokenId;
-        address borrower;
-        address paybackToken;
-        uint256 borrowAmount;
-        uint256 paybackAmount;
-        uint256 startDeadline;
-        uint256 returnDeadline;
-    }
+contract NiftyBank is INiftyBank {
+    IDebtToken public debtTokenContract;
 
-    mapping(uint256 => DebtInfo) debts;
-
-    constructor() Ownable() {
-        debtToken = address(new DebtToken('NiftyBank Debt Token', 'NDT'));
-    }
-
-    function debtOf(uint256 _debtTokenId) external view 
-    returns 
-    (address, uint256, address, address, uint256, uint256, uint256, uint256) {
-        DebtInfo memory debtInfo = debts[_debtTokenId];
-        return (
-            debtInfo.nft, 
-            debtInfo.tokenId, 
-            debtInfo.borrower, 
-            debtInfo.paybackToken, 
-            debtInfo.borrowAmount,
-            debtInfo.paybackAmount,
-            debtInfo.startDeadline,
-            debtInfo.returnDeadline
-        );
+    constructor() {
+        debtTokenContract = new DebtToken('NiftyBank Debt Token', 'NDT');
     }
 
     function depositNft(
         address _nft,
         uint256 _tokenId,
-        address _paybackToken,
+        address _borrowToken,
         uint256 _borrowAmount,
         uint256 _paybackAmount,
         uint256 _startDeadline,
@@ -58,42 +29,40 @@ contract NiftyBank is INiftyBank, Ownable {
             "Pay back at least the borrow amount"
         );
         IERC721(_nft).safeTransferFrom(msg.sender, address(this), _tokenId);
-        uint256 debtTokenId = IDebtToken(debtToken).mint(msg.sender);
-        debts[debtTokenId] = DebtInfo({
+        DebtInfo memory debtInfo = DebtInfo({
             nft: _nft,
             tokenId: _tokenId,
             borrower: msg.sender,
-            paybackToken: _paybackToken,
+            borrowToken: _borrowToken,
             borrowAmount: _borrowAmount,
             paybackAmount: _paybackAmount,
             startDeadline: _startDeadline,
             returnDeadline: _returnDeadline
         });
+        uint256 debtTokenId = debtTokenContract.mint(debtInfo);
     }
 
     function withdrawNft(uint256 _debtTokenId) external {
+        DebtInfo memory debtInfo = debtTokenContract.debtInfoOf(_debtTokenId);
         require(
-            msg.sender == debts[_debtTokenId].borrower,
+            msg.sender == debtInfo.borrower,
             "Only the borrower can withdraw"
         );
         require(
-            IDebtToken(debtToken).ownerOf(_debtTokenId) == msg.sender,
+            debtTokenContract.ownerOf(_debtTokenId) == msg.sender,
             "Not the debt token holder"
         );
-        IDebtToken(debtToken).burn(_debtTokenId);
-        address nft = debts[_debtTokenId].nft;
-        uint256 tokenId = debts[_debtTokenId].tokenId;
-        IERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
+        debtTokenContract.burn(_debtTokenId);
+        IERC721(debtInfo.nft).safeTransferFrom(address(this), msg.sender, debtInfo.tokenId);
     }
 
     function executeLoan(uint256 _debtTokenId) external {
+        DebtInfo memory debtInfo = debtTokenContract.debtInfoOf(_debtTokenId);
         require(
-            block.timestamp < debts[_debtTokenId].startDeadline,
+            block.timestamp < debtInfo.startDeadline,
             "Loan offer expired"
         );
 
-        DebtInfo memory debtInfo = debts[_debtTokenId];
-        IDebtToken debtTokenContract = IDebtToken(debtToken);
         require(
             debtTokenContract.ownerOf(_debtTokenId) ==
                 debtInfo.borrower,
@@ -102,7 +71,7 @@ contract NiftyBank is INiftyBank, Ownable {
 
         // Transfer funds
         require(
-            IERC20(debtInfo.paybackToken).transferFrom(
+            IERC20(debtInfo.borrowToken).transferFrom(
                 msg.sender,
                 debtInfo.borrower,
                 debtInfo.borrowAmount
@@ -118,41 +87,38 @@ contract NiftyBank is INiftyBank, Ownable {
     }
 
     function payDebt(uint256 _debtTokenId) external {
+        DebtInfo memory debtInfo = debtTokenContract.debtInfoOf(_debtTokenId);
         require(
-            msg.sender == debts[_debtTokenId].borrower,
+            msg.sender == debtInfo.borrower,
             "Only the borrower can pay debt"
         );
         require(
-            block.timestamp < debts[_debtTokenId].returnDeadline,
+            block.timestamp < debtInfo.returnDeadline,
             "Exceeds deadline"
         );
-        address paybackToken = debts[_debtTokenId].paybackToken;
-        address lender = IDebtToken(debtToken).ownerOf(_debtTokenId);
+        address lender = debtTokenContract.ownerOf(_debtTokenId);
         require(
-            IERC20(paybackToken).transferFrom(
+            IERC20(debtInfo.borrowToken).transferFrom(
                 msg.sender,
                 lender,
-                debts[_debtTokenId].paybackAmount
+                debtInfo.paybackAmount
             ),
             "Failed to pay back debt"
         );
 
-        address nft = debts[_debtTokenId].nft;
-        uint256 tokenId = debts[_debtTokenId].tokenId;
-        IERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
-        IDebtToken(debtToken).burn(_debtTokenId);
+        IERC721(debtInfo.nft).safeTransferFrom(address(this), msg.sender, debtInfo.tokenId);
+        debtTokenContract.burn(_debtTokenId);
     }
 
     function claimDefaultedNft(uint256 _debtTokenId) external {
+        DebtInfo memory debtInfo = debtTokenContract.debtInfoOf(_debtTokenId);
         require(
-            block.timestamp >= debts[_debtTokenId].returnDeadline,
+            block.timestamp >= debtInfo.returnDeadline,
             "Exceeds deadline"
         );
-        address lender = IDebtToken(debtToken).ownerOf(_debtTokenId);
+        address lender = debtTokenContract.ownerOf(_debtTokenId);
         require(msg.sender == lender, "Only the lender can claim the NFT");
 
-        address nft = debts[_debtTokenId].nft;
-        uint256 tokenId = debts[_debtTokenId].tokenId;
-        IERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
+        IERC721(debtInfo.nft).safeTransferFrom(address(this), msg.sender, debtInfo.tokenId);
     }
 }
