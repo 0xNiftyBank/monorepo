@@ -7,6 +7,7 @@ import "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
 
 import "./interfaces/IDebtToken.sol";
 import "./interfaces/INiftyBank.sol";
+import "./DebtToken.sol";
 
 contract NiftyBank is INiftyBank, Ownable {
     address private debtToken;
@@ -22,8 +23,8 @@ contract NiftyBank is INiftyBank, Ownable {
 
     mapping(address => mapping(uint256 => DebtInfo)) debts;
 
-    constructor(address _debtToken) Ownable() {
-        debtToken = _debtToken;
+    constructor() Ownable() {
+        debtToken = address(new DebtToken('NiftyBank Debt Token', 'NDT'));
     }
 
     function depositNft(
