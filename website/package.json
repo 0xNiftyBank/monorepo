@@ -18,7 +18,7 @@
     "lint": "eslint --ext .tsx,.ts .",
     "typecheck": "tsc --noEmit",
     "postexport": "yarn build:sitemap",
-    "generate:typechain": "typechain --target ethers-v5 --outDir ./tmp './artifacts/*.json'"
+    "generate:typechain": "typechain --target ethers-v5 '../contracts/out/NiftyBank.sol/*.json'"
   },
   "dependencies": {
     "@0xsequence/multicall": "^0.35.1",
@@ -51,7 +51,7 @@
     "react-use": "^17.3.1",
     "styled-components": "^5.3.3",
     "swr": "^1.1.1",
-    "typechain": "^6.1.0"
+    "typechain": "^7.0.1"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
