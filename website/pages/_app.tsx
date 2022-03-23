@@ -7,6 +7,7 @@ import { ThemeProvider } from 'styled-components';
 import { Web3ReactProvider } from '@web3-react/core';
 import { Web3Provider } from '@ethersproject/providers';
 import { WalletConnectionProviderState } from '../contexts/wallet-connection';
+import { Header } from '../components/Header';
 import { BlockWatcherProvider } from '../contexts/block-watcher';
 import { themes } from '../styles/theme';
 import '../styles/resets.css';
@@ -80,6 +81,7 @@ export default class Dapp extends App {
         <DappConfig>
           <Web3ReactProvider getLibrary={getLibrary}>
             <ThemeProvider theme={themes.light}>
+              <Header />
               <BlockWatcherProvider>
                 <WalletConnectionProviderState>
                   <Component {...modifiedPageProps} />
