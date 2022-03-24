@@ -103,6 +103,35 @@ contract NiftyBankTest is DSTest {
         assertEq(nftToken.ownerOf(_tokenId), address(niftyBank));
     }
 
+    function testGetAllDebtInfos() public {
+        // Borrower approve NiftyBank to use their NFT
+        cheats.prank(BORROWER);
+        nftToken.setApprovalForAll(address(niftyBank), true);
+
+        // Borrower deposit NFT to NiftyBank
+        cheats.prank(BORROWER);
+        _debtTokenId = niftyBank.depositNft(
+            _nft,
+            _tokenId,
+            _borrowToken,
+            _borrowAmount,
+            _paybackAmount,
+            _startDeadline,
+            _returnDeadline
+        );
+
+        DebtInfo[] memory infos = niftyBank.getAllDebtInfos();
+        assertEq(infos.length, 1);
+
+        assertEq(_nft, infos[0].nft);
+        assertEq(_tokenId, infos[0].tokenId);
+        assertEq(BORROWER, infos[0].borrower);
+        assertEq(_borrowToken, infos[0].borrowToken);
+        assertEq(_paybackAmount, infos[0].paybackAmount);
+        assertEq(_startDeadline, infos[0].startDeadline);
+        assertEq(_returnDeadline, infos[0].returnDeadline);
+    }
+
     function testWithdrawNft() public {
         // Borrower deposit the NFT first
         testDepositNft();

@@ -20,6 +20,16 @@ contract NiftyBank is INiftyBank {
         return _debtTokenContract;
     }
 
+    function getAllDebtInfos() external view returns (DebtInfo[] memory debtInfos) {
+      uint256 numDebts = _debtTokenContract.currentTokenId();
+      debtInfos = new DebtInfo[](numDebts);
+
+      for (uint256 i = 0; i < numDebts; i++) {
+        // NOTE: One off here due to id being incremented before returned
+        debtInfos[i] = _debtTokenContract.debtInfoOf(i + 1);
+      }
+    }
+
     function depositNft(
         address _nft,
         uint256 _tokenId,
