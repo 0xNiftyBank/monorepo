@@ -33,6 +33,10 @@ contract NiftyBank is INiftyBank {
             _paybackAmount >= _borrowAmount,
             "Pay back at least the borrow amount"
         );
+        require(
+            _returnDeadline >= _startDeadline,
+            "returnDeadline should be later than startDeadline"
+        );
         IERC721(_nft).safeTransferFrom(msg.sender, address(this), _tokenId);
         DebtInfo memory debtInfo = DebtInfo({
             nft: _nft,
