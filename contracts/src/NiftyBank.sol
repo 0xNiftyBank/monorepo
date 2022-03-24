@@ -65,7 +65,7 @@ contract NiftyBank is INiftyBank {
     function executeLoan(uint256 _debtTokenId) external {
         DebtInfo memory debtInfo = _debtTokenContract.debtInfoOf(_debtTokenId);
         require(
-            block.timestamp < debtInfo.startDeadline,
+            block.timestamp <= debtInfo.startDeadline,
             "Loan offer expired"
         );
 

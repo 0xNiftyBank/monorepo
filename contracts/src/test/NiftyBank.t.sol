@@ -40,7 +40,7 @@ contract NiftyBankTest is DSTest {
         _borrowerBalance = 1000;
         _borrowAmount = 10000;
         _paybackAmount = _borrowAmount + _borrowerBalance;
-        _startDeadline = block.timestamp + 300000;
+        _startDeadline = block.timestamp;
         _returnDeadline = block.timestamp;
 
         // Deploy NiftyBank
