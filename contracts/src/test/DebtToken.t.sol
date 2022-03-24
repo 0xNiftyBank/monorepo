@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.12;
 
-import { DebtInfo } from "../interfaces/IDebtToken.sol";
-import { DebtToken } from "../DebtToken.sol";
-import { DSTestPlus } from "./utils/DSTestPlus.sol";
+import {DebtInfo} from "../interfaces/IDebtToken.sol";
+import {DebtToken} from "../DebtToken.sol";
+import {DSTestPlus} from "./utils/DSTestPlus.sol";
 
 interface CheatCodes {
-  function prank(address) external;
-  function expectRevert(bytes calldata) external;
+    function prank(address) external;
+
+    function expectRevert(bytes calldata) external;
 }
 
 contract DebtTokenTest is DSTestPlus {
-    address constant DEBT_TOKEN_DEPLOYER = 0xb0b670fc1F7724119963018DB0BfA86aDb22d941;
-    address constant DEBT_TOKEN_OWNER = 0xED7d5F38C79115ca12fe6C0041abb22F0A06C300;
+    address constant DEBT_TOKEN_DEPLOYER =
+        0xb0b670fc1F7724119963018DB0BfA86aDb22d941;
+    address constant DEBT_TOKEN_OWNER =
+        0xED7d5F38C79115ca12fe6C0041abb22F0A06C300;
     address constant OTHER_ADDRESS = 0x7373c42502874C88954bDd6D50b53061F018422e;
 
     address private _nft;
@@ -56,31 +59,42 @@ contract DebtTokenTest is DSTestPlus {
         uint256 count = debtToken.currentTokenId();
 
         cheats.prank(DEBT_TOKEN_DEPLOYER);
-        uint256 debtTokenId = debtToken.mint(createDebtInfoFor(DEBT_TOKEN_OWNER));
-        
+        uint256 debtTokenId = debtToken.mint(
+            createDebtInfoFor(DEBT_TOKEN_OWNER)
+        );
+
         assertEq(debtTokenId, count + 1);
         assertEq(debtToken.ownerOf(debtTokenId), DEBT_TOKEN_OWNER);
         assertEq(debtToken.debtInfoOf(debtTokenId).nft, _nft);
         assertEq(debtToken.debtInfoOf(debtTokenId).borrowToken, _borrowToken);
         assertEq(debtToken.debtInfoOf(debtTokenId).borrower, DEBT_TOKEN_OWNER);
         assertEq(debtToken.debtInfoOf(debtTokenId).borrowAmount, _borrowAmount);
-        assertEq(debtToken.debtInfoOf(debtTokenId).paybackAmount, _paybackAmount);
-        assertEq(debtToken.debtInfoOf(debtTokenId).startDeadline, _startDeadline);
-        assertEq(debtToken.debtInfoOf(debtTokenId).returnDeadline, _returnDeadline);
+        assertEq(
+            debtToken.debtInfoOf(debtTokenId).paybackAmount,
+            _paybackAmount
+        );
+        assertEq(
+            debtToken.debtInfoOf(debtTokenId).startDeadline,
+            _startDeadline
+        );
+        assertEq(
+            debtToken.debtInfoOf(debtTokenId).returnDeadline,
+            _returnDeadline
+        );
         console.log(unicode"✅ mint() test passed");
     }
 
     function testMintAsNotOwner() public {
-        cheats.expectRevert(
-            bytes("Ownable: caller is not the owner")
-        );
+        cheats.expectRevert(bytes("Ownable: caller is not the owner"));
         cheats.prank(OTHER_ADDRESS);
         debtToken.mint(createDebtInfoFor(DEBT_TOKEN_OWNER));
     }
 
     function testBurn() public {
         cheats.prank(DEBT_TOKEN_DEPLOYER);
-        uint256 debtTokenId = debtToken.mint(createDebtInfoFor(DEBT_TOKEN_OWNER));
+        uint256 debtTokenId = debtToken.mint(
+            createDebtInfoFor(DEBT_TOKEN_OWNER)
+        );
         assertEq(debtToken.ownerOf(debtTokenId), DEBT_TOKEN_OWNER);
 
         cheats.prank(DEBT_TOKEN_DEPLOYER);
@@ -90,17 +104,21 @@ contract DebtTokenTest is DSTestPlus {
 
     function testBurnAsNotOwner() public {
         cheats.prank(DEBT_TOKEN_DEPLOYER);
-        uint256 debtTokenId = debtToken.mint(createDebtInfoFor(DEBT_TOKEN_OWNER));
+        uint256 debtTokenId = debtToken.mint(
+            createDebtInfoFor(DEBT_TOKEN_OWNER)
+        );
         assertEq(debtToken.ownerOf(debtTokenId), DEBT_TOKEN_OWNER);
 
-        cheats.expectRevert(
-            bytes("Ownable: caller is not the owner")
-        );
+        cheats.expectRevert(bytes("Ownable: caller is not the owner"));
         cheats.prank(OTHER_ADDRESS);
         debtToken.burn(debtTokenId);
     }
 
-    function createDebtInfoFor(address _borrower) private view returns (DebtInfo memory debtInfo) {
+    function createDebtInfoFor(address _borrower)
+        private
+        view
+        returns (DebtInfo memory debtInfo)
+    {
         debtInfo = DebtInfo({
             nft: _nft,
             tokenId: _tokenId,

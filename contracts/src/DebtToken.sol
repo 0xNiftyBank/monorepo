@@ -23,12 +23,20 @@ contract DebtToken is IDebtToken, ERC721, Ownable {
         return tokenCounter.current();
     }
 
-    function debtInfoOf(uint256 _debtTokenId) external view returns (DebtInfo memory debtInfo) {
+    function debtInfoOf(uint256 _debtTokenId)
+        external
+        view
+        returns (DebtInfo memory debtInfo)
+    {
         debtInfo = debts[_debtTokenId];
         return debtInfo;
     }
 
-    function mint(DebtInfo memory _debtInfo) external onlyOwner returns (uint256 debtTokenId) {
+    function mint(DebtInfo memory _debtInfo)
+        external
+        onlyOwner
+        returns (uint256 debtTokenId)
+    {
         debtTokenId = nextTokenId();
         _safeMint(_debtInfo.borrower, debtTokenId);
         debts[debtTokenId] = _debtInfo;
@@ -47,7 +55,8 @@ contract DebtToken is IDebtToken, ERC721, Ownable {
         bytes memory _data
     ) public virtual override(ERC721, IERC721) {
         require(
-            owner() == _msgSender() || _isApprovedOrOwner(_msgSender(), tokenId),
+            owner() == _msgSender() ||
+                _isApprovedOrOwner(_msgSender(), tokenId),
             "ERC721: transfer caller is not owner nor approved"
         );
         _safeTransfer(from, to, tokenId, _data);

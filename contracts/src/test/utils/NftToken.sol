@@ -19,7 +19,11 @@ contract NftToken is ERC721, Ownable {
         return tokenCounter.current();
     }
 
-    function mint(address account) external onlyOwner returns (uint256 debtTokenId) {
+    function mint(address account)
+        external
+        onlyOwner
+        returns (uint256 debtTokenId)
+    {
         debtTokenId = nextTokenId();
         _safeMint(account, debtTokenId);
         return debtTokenId;

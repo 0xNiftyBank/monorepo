@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.12;
 
-import { IDebtToken, DebtInfo } from "../interfaces/IDebtToken.sol";
-import { INiftyBank } from "../interfaces/INiftyBank.sol";
-import { NiftyBank } from "../NiftyBank.sol";
-import { NftToken } from "./utils/NftToken.sol";
-import { StableToken } from "./utils/StableToken.sol";
+import {IDebtToken, DebtInfo} from "../interfaces/IDebtToken.sol";
+import {INiftyBank} from "../interfaces/INiftyBank.sol";
+import {NiftyBank} from "../NiftyBank.sol";
+import {NftToken} from "./utils/NftToken.sol";
+import {StableToken} from "./utils/StableToken.sol";
 
 import "ds-test/test.sol";
 
 interface CheatCodes {
-  function prank(address) external;
-  function expectRevert(bytes calldata) external;
+    function prank(address) external;
+
+    function expectRevert(bytes calldata) external;
 }
 
 contract NiftyBankTest is DSTest {
@@ -89,7 +90,7 @@ contract NiftyBankTest is DSTest {
         assertEq(debtTokenContract.ownerOf(_debtTokenId), BORROWER);
 
         // Verify DebtInfo
-        DebtInfo memory debtInfo = debtTokenContract.debtInfoOf(_debtTokenId);        
+        DebtInfo memory debtInfo = debtTokenContract.debtInfoOf(_debtTokenId);
         assertEq(debtInfo.nft, _nft);
         assertEq(debtInfo.tokenId, _tokenId);
         assertEq(debtInfo.borrower, BORROWER);
@@ -141,9 +142,7 @@ contract NiftyBankTest is DSTest {
         niftyBank.withdrawNft(_debtTokenId);
 
         // Verify that DebtToken has been burnt
-        cheats.expectRevert(
-            bytes("ERC721: owner query for nonexistent token")
-        );
+        cheats.expectRevert(bytes("ERC721: owner query for nonexistent token"));
         debtTokenContract.ownerOf(_debtTokenId);
 
         // Verify that current owner of NFT is the borrower
@@ -166,7 +165,10 @@ contract NiftyBankTest is DSTest {
         assertEq(debtTokenContract.ownerOf(_debtTokenId), LENDER);
 
         // Verify that current stable coin balance of the borrower increased by `_borrowAmount`
-        assertEq(stableToken.balanceOf(BORROWER), _borrowAmount + _borrowerBalance);
+        assertEq(
+            stableToken.balanceOf(BORROWER),
+            _borrowAmount + _borrowerBalance
+        );
     }
 
     function testPayDebt() public {
@@ -182,9 +184,7 @@ contract NiftyBankTest is DSTest {
         niftyBank.payDebt(_debtTokenId);
 
         // Verify that DebtToken has been burnt
-        cheats.expectRevert(
-            bytes("ERC721: owner query for nonexistent token")
-        );
+        cheats.expectRevert(bytes("ERC721: owner query for nonexistent token"));
         debtTokenContract.ownerOf(_debtTokenId);
 
         // Verify that current owner of NFT is the borrower
@@ -207,9 +207,7 @@ contract NiftyBankTest is DSTest {
         niftyBank.claimDefaultedNft(_debtTokenId);
 
         // Verify that DebtToken has been burnt
-        cheats.expectRevert(
-            bytes("ERC721: owner query for nonexistent token")
-        );
+        cheats.expectRevert(bytes("ERC721: owner query for nonexistent token"));
         debtTokenContract.ownerOf(_debtTokenId);
 
         // Verify that current owner of NFT is the borrower
