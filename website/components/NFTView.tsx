@@ -31,6 +31,7 @@ export const StyledFrame = styled.div`
 `;
 
 interface NFTViewProps {
+  onClick?: () => void;
   contract: string;
   tokenId: number;
   borrower?: string; // TODO: the following fields are not yet rendered
@@ -44,6 +45,7 @@ interface NFTViewProps {
  */
 export const NFTView: FC<NFTViewProps> = ({
   children,
+  onClick,
   contract,
   tokenId,
   floorPriceInEth,
@@ -70,7 +72,10 @@ export const NFTView: FC<NFTViewProps> = ({
   return (
     <div>
       {metadata && (
-        <div className={'hover:bg-sky-100 hover:cursor-pointer p-5'}>
+        <div
+          className={'hover:bg-sky-100 hover:cursor-pointer p-5'}
+          onClick={onClick}
+        >
           <div style={{ display: 'flex' }}>
             <div style={{ width: 200, display: 'flex' }}>
               <img src={resolveUrl(metadata.image)} />

@@ -11,6 +11,13 @@ const HomePage: NextPage = () => {
       <PageContainer style={{ position: 'relative' }} id="top">
         <H1> Hello Borrower</H1>
         <NFTView
+          onClick={() => {
+            console.log(
+              'clicked on ',
+              '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d',
+              100,
+            );
+          }}
           contract="0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d"
           tokenId={100}
           floorPriceInEth={'101'}
