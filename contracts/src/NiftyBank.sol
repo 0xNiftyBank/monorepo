@@ -3,16 +3,21 @@ pragma solidity ^0.8.0;
 
 import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-contracts/contracts/token/ERC721/IERC721.sol";
+import "openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 
 import "./interfaces/IDebtToken.sol";
 import "./interfaces/INiftyBank.sol";
 import "./DebtToken.sol";
 
 contract NiftyBank is INiftyBank {
-    IDebtToken public debtTokenContract;
+    IDebtToken private _debtTokenContract;
 
     constructor() {
-        debtTokenContract = new DebtToken('NiftyBank Debt Token', 'NDT');
+        _debtTokenContract = new DebtToken('NiftyBank Debt Token', 'NDT');
+    }
+
+    function debtTokenContract() external view returns (IDebtToken) {
+        return _debtTokenContract;
     }
 
     function depositNft(
@@ -23,7 +28,7 @@ contract NiftyBank is INiftyBank {
         uint256 _paybackAmount,
         uint256 _startDeadline,
         uint256 _returnDeadline
-    ) external {
+    ) external returns(uint256 debtTokenId) {
         require(
             _paybackAmount >= _borrowAmount,
             "Pay back at least the borrow amount"
@@ -39,32 +44,33 @@ contract NiftyBank is INiftyBank {
             startDeadline: _startDeadline,
             returnDeadline: _returnDeadline
         });
-        uint256 debtTokenId = debtTokenContract.mint(debtInfo);
+        debtTokenId = _debtTokenContract.mint(debtInfo);
+        return debtTokenId;
     }
 
     function withdrawNft(uint256 _debtTokenId) external {
-        DebtInfo memory debtInfo = debtTokenContract.debtInfoOf(_debtTokenId);
+        DebtInfo memory debtInfo = _debtTokenContract.debtInfoOf(_debtTokenId);
         require(
             msg.sender == debtInfo.borrower,
             "Only the borrower can withdraw"
         );
         require(
-            debtTokenContract.ownerOf(_debtTokenId) == msg.sender,
+            _debtTokenContract.ownerOf(_debtTokenId) == msg.sender,
             "Not the debt token holder"
         );
-        debtTokenContract.burn(_debtTokenId);
+        _debtTokenContract.burn(_debtTokenId);
         IERC721(debtInfo.nft).safeTransferFrom(address(this), msg.sender, debtInfo.tokenId);
     }
 
     function executeLoan(uint256 _debtTokenId) external {
-        DebtInfo memory debtInfo = debtTokenContract.debtInfoOf(_debtTokenId);
+        DebtInfo memory debtInfo = _debtTokenContract.debtInfoOf(_debtTokenId);
         require(
-            block.timestamp < debtInfo.startDeadline,
+            block.timestamp <= debtInfo.startDeadline,
             "Loan offer expired"
         );
 
         require(
-            debtTokenContract.ownerOf(_debtTokenId) ==
+            _debtTokenContract.ownerOf(_debtTokenId) ==
                 debtInfo.borrower,
             "Loan already started"
         );
@@ -79,7 +85,7 @@ contract NiftyBank is INiftyBank {
             "Borrow amount transfer failed"
         );
         // Transfer Debt Token
-        debtTokenContract.safeTransferFrom(
+        _debtTokenContract.safeTransferFrom(
             debtInfo.borrower,
             msg.sender,
             _debtTokenId
@@ -87,16 +93,12 @@ contract NiftyBank is INiftyBank {
     }
 
     function payDebt(uint256 _debtTokenId) external {
-        DebtInfo memory debtInfo = debtTokenContract.debtInfoOf(_debtTokenId);
+        DebtInfo memory debtInfo = _debtTokenContract.debtInfoOf(_debtTokenId);
         require(
             msg.sender == debtInfo.borrower,
             "Only the borrower can pay debt"
         );
-        require(
-            block.timestamp < debtInfo.returnDeadline,
-            "Exceeds deadline"
-        );
-        address lender = debtTokenContract.ownerOf(_debtTokenId);
+        address lender = _debtTokenContract.ownerOf(_debtTokenId);
         require(
             IERC20(debtInfo.borrowToken).transferFrom(
                 msg.sender,
@@ -107,18 +109,28 @@ contract NiftyBank is INiftyBank {
         );
 
         IERC721(debtInfo.nft).safeTransferFrom(address(this), msg.sender, debtInfo.tokenId);
-        debtTokenContract.burn(_debtTokenId);
+        _debtTokenContract.burn(_debtTokenId);
     }
 
     function claimDefaultedNft(uint256 _debtTokenId) external {
-        DebtInfo memory debtInfo = debtTokenContract.debtInfoOf(_debtTokenId);
+        DebtInfo memory debtInfo = _debtTokenContract.debtInfoOf(_debtTokenId);
         require(
             block.timestamp >= debtInfo.returnDeadline,
-            "Exceeds deadline"
+            "Debt is not defaulted yet"
         );
-        address lender = debtTokenContract.ownerOf(_debtTokenId);
+        address lender = _debtTokenContract.ownerOf(_debtTokenId);
         require(msg.sender == lender, "Only the lender can claim the NFT");
 
-        IERC721(debtInfo.nft).safeTransferFrom(address(this), msg.sender, debtInfo.tokenId);
+        IERC721(debtInfo.nft).safeTransferFrom(address(this), lender, debtInfo.tokenId);
+        _debtTokenContract.burn(_debtTokenId);
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 }

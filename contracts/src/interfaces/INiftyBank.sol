@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface INiftyBank {
+import { IDebtToken } from "./IDebtToken.sol";
+
+import "openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
+
+interface INiftyBank is IERC721Receiver {
+    function debtTokenContract() external view returns (IDebtToken);
+
     function depositNft(
         address _nft,
         uint256 _tokenId,
@@ -10,7 +16,7 @@ interface INiftyBank {
         uint256 _paybackAmount,
         uint256 _startDeadline,
         uint256 _returnDeadline
-    ) external;
+    ) external returns(uint256 debtTokenId);
 
     function executeLoan(uint256 _debtTokenId) external;
 
