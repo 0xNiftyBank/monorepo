@@ -46,6 +46,10 @@ export const NFTView: FC<NFTViewProps> = ({
   children,
   contract,
   tokenId,
+  floorPriceInEth,
+  borrower,
+  loanDueAt,
+  interestRate,
   ...rest
 }) => {
   const [metadata, setMetadata] = useState({ name: '', image: '' });
@@ -71,7 +75,19 @@ export const NFTView: FC<NFTViewProps> = ({
             <div style={{ width: 200, display: 'flex' }}>
               <img src={resolveUrl(metadata.image)} />
             </div>
-            <p>{metadata.name || tokenId}</p>
+            <div className={'p-5'}>
+              <p className={'font-semibold'}>{metadata.name || tokenId}</p>
+              {floorPriceInEth && (
+                <p> Estimated floor price {floorPriceInEth}Ξ</p>
+              )}
+              {loanDueAt && (
+                <p>
+                  {' '}
+                  Loan Due: {loanDueAt.toDateString()}{' '}
+                  {loanDueAt.toTimeString()}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
