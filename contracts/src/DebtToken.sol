@@ -40,6 +40,19 @@ contract DebtToken is IDebtToken, ERC721, Ownable {
         delete debts[_debtTokenId];
     }
 
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory _data
+    ) public virtual override(ERC721, IERC721) {
+        require(
+            owner() == _msgSender() || _isApprovedOrOwner(_msgSender(), tokenId),
+            "ERC721: transfer caller is not owner nor approved"
+        );
+        _safeTransfer(from, to, tokenId, _data);
+    }
+
     function nextTokenId() private returns (uint256) {
         tokenCounter.increment();
         return tokenCounter.current();
