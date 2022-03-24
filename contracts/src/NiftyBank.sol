@@ -13,11 +13,25 @@ contract NiftyBank is INiftyBank {
     IDebtToken private _debtTokenContract;
 
     constructor() {
-        _debtTokenContract = new DebtToken('NiftyBank Debt Token', 'NDT');
+        _debtTokenContract = new DebtToken("NiftyBank Debt Token", "NDT");
     }
 
     function debtTokenContract() external view returns (IDebtToken) {
         return _debtTokenContract;
+    }
+
+    function getAllDebtInfos()
+        external
+        view
+        returns (DebtInfo[] memory debtInfos)
+    {
+        uint256 numDebts = _debtTokenContract.currentTokenId();
+        debtInfos = new DebtInfo[](numDebts);
+
+        for (uint256 i = 0; i < numDebts; i++) {
+            // NOTE: One off here due to id being incremented before returned
+            debtInfos[i] = _debtTokenContract.debtInfoOf(i + 1);
+        }
     }
 
     function depositNft(
@@ -28,7 +42,7 @@ contract NiftyBank is INiftyBank {
         uint256 _paybackAmount,
         uint256 _startDeadline,
         uint256 _returnDeadline
-    ) external returns(uint256 debtTokenId) {
+    ) external returns (uint256 debtTokenId) {
         require(
             _paybackAmount >= _borrowAmount,
             "Pay back at least the borrow amount"
@@ -63,7 +77,11 @@ contract NiftyBank is INiftyBank {
             "Not the debt token holder"
         );
         _debtTokenContract.burn(_debtTokenId);
-        IERC721(debtInfo.nft).safeTransferFrom(address(this), msg.sender, debtInfo.tokenId);
+        IERC721(debtInfo.nft).safeTransferFrom(
+            address(this),
+            msg.sender,
+            debtInfo.tokenId
+        );
     }
 
     function executeLoan(uint256 _debtTokenId) external {
@@ -74,8 +92,7 @@ contract NiftyBank is INiftyBank {
         );
 
         require(
-            _debtTokenContract.ownerOf(_debtTokenId) ==
-                debtInfo.borrower,
+            _debtTokenContract.ownerOf(_debtTokenId) == debtInfo.borrower,
             "Loan already started"
         );
 
@@ -112,7 +129,11 @@ contract NiftyBank is INiftyBank {
             "Failed to pay back debt"
         );
 
-        IERC721(debtInfo.nft).safeTransferFrom(address(this), msg.sender, debtInfo.tokenId);
+        IERC721(debtInfo.nft).safeTransferFrom(
+            address(this),
+            msg.sender,
+            debtInfo.tokenId
+        );
         _debtTokenContract.burn(_debtTokenId);
     }
 
@@ -125,7 +146,11 @@ contract NiftyBank is INiftyBank {
         address lender = _debtTokenContract.ownerOf(_debtTokenId);
         require(msg.sender == lender, "Only the lender can claim the NFT");
 
-        IERC721(debtInfo.nft).safeTransferFrom(address(this), lender, debtInfo.tokenId);
+        IERC721(debtInfo.nft).safeTransferFrom(
+            address(this),
+            lender,
+            debtInfo.tokenId
+        );
         _debtTokenContract.burn(_debtTokenId);
     }
 

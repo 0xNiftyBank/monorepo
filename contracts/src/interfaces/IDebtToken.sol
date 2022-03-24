@@ -17,9 +17,14 @@ struct DebtInfo {
 interface IDebtToken is IERC721 {
     function currentTokenId() external view returns (uint256);
 
-    function debtInfoOf(uint256 _debtTokenId) external view returns (DebtInfo memory debtInfo);
+    function debtInfoOf(uint256 _debtTokenId)
+        external
+        view
+        returns (DebtInfo memory debtInfo);
 
-    function mint(DebtInfo memory _debtInfo) external returns (uint256 debtTokenId);
+    function mint(DebtInfo memory _debtInfo)
+        external
+        returns (uint256 debtTokenId);
 
     function burn(uint256 _debtTokenId) external;
 }
